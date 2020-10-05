@@ -1,14 +1,12 @@
-// using trefle.io api for fun //
+// using apis for fun + tests //
 
-const baseurl = 'https://cors-anywhere.herokuapp.com/https://trefle.io/api/v1/distributions/'
-const place = 'antarctica'; // lower case
-const token = '/plants?token=AkMqGCYLEYjgBeyV7GqoCkxcbN2l9At_nGWfQwimLjw';
-const search = '';
-const url = baseurl + place + token;
+// trefle.io - plants
+// const baseurl = 'https://cors-anywhere.herokuapp.com/https://trefle.io/api/v1/distributions/'
+// const place = 'antarctica'; // lower case
+// const token = '/plants?token='; // add token at end
+// const search = '';
+// const url = baseurl + place + token;
 
-// let myHeaders = new Headers({
-//     'Access-Control-Allow-Origin':'*'
-// });
 
 //basic fetch function
 function fetchJson(url,) {
