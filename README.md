@@ -1,3 +1,3 @@
 # wiki
 
-ongoing api learning using wiki api
+ongoing api learning using various apis
