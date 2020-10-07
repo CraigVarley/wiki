@@ -54,9 +54,9 @@ function candidateHtml(data) {
         office_full,
         election_districts
     } = candidateJson.results[candidateIndex];
-    
+
     // flips candidate name into readable order (usually), but military ranks mess it up a bit
-    // let nameswitch = name.split(',').reverse().join(' ');
+    let nameswitch = name.split(',').reverse().join(' ');
     // let namelower = nameswitch.toLowerCase();
     // let namecap = nameswitch.charAt(0).toUpperCase();
 
@@ -68,7 +68,7 @@ function candidateHtml(data) {
     }
     else if (office === 'H' && office !== 'P') { // House candidate and not president
     candidateCard = 
-    `<p>${namecap} is the ${party_full} candidate in the ${state} district ${election_districts} ${office_full} race`;
+    `<p>${nameswitch} is the ${party_full} candidate in the ${state} district ${election_districts} ${office_full} race`;
     }
     // now fill the div
     candidateDiv.innerHTML = candidateCard;
