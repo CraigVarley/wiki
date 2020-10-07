@@ -54,8 +54,12 @@ function candidateHtml(data) {
         office_full,
         election_districts
     } = candidateJson.results[candidateIndex];
+    
     // flips candidate name into readable order (usually), but military ranks mess it up a bit
-    let nameswitch = name.split(',').reverse().join(' ');
+    // let nameswitch = name.split(',').reverse().join(' ');
+    // let namelower = nameswitch.toLowerCase();
+    // let namecap = nameswitch.charAt(0).toUpperCase();
+
     // create the html
     // check to see if senate (S) otherwise House
     if (office === 'S') {
@@ -64,7 +68,7 @@ function candidateHtml(data) {
     }
     else if (office === 'H' && office !== 'P') { // House candidate and not president
     candidateCard = 
-    `<p>${nameswitch} is the ${party_full} candidate in the ${state} district ${election_districts} ${office_full} race`;
+    `<p>${namecap} is the ${party_full} candidate in the ${state} district ${election_districts} ${office_full} race`;
     }
     // now fill the div
     candidateDiv.innerHTML = candidateCard;
@@ -96,8 +100,8 @@ function candidateCommitteeHtml(data) {
         const url = urlbase + 'committee/' + committee_id + '/totals/?' + token; // brings up all committees, work in index
         fetchJson(url)
             .then(candidateCommitteeFinancials)
-            .then(money => console.log(money))
-            // add html to variable
+            .then(money => console.log(money)) // <---- THIS LOGS ALL CORRECTLY BUT DOESN'T PUSH TO HTML CORRECTLY!
+            // add html to variable - PROBLEM SOMETHING BELOW HERE I THINK.
             committeeHtml += `
             <p>Candidate Committee #${i}: ${name}</p>
             ${committeeFinanceHtml}
