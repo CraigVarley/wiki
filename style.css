@@ -4,3 +4,11 @@ html {
 }
 
 /* ---------- FORM COMPONENTS ---------- */
+
+#cap {
+    text-transform: capitalize;   
+}
+
+#committeeName {
+    padding-left: 30px;
+}
