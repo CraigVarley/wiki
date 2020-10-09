@@ -8,7 +8,9 @@ let committeeHtml ='';
 let namefinal = '';
 let wikiJson = [];
 let committeeFinanceJson = [];
+let receiptsJson=[];
 let committeeFinanceHtml='';
+let committeeId='';
 const name = document.getElementById('name');
 const namebutton = document.getElementById('namebutton');
 const namesearch = document.getElementById('namesearch');
@@ -30,7 +32,7 @@ function fetchJson(url) {
     return fetch(url)
         .then(checkStatus)
         .then(data => data.json())
-        .catch(e => candidateDiv.innerHTML = `<p>Can't find some of that person's info. Clear and try again.</p>`)
+        .catch(e => candidateDiv.innerHTML = `<p>Can't find some of that person's info or photograph. Clear and try again.</p>`)
 }
 
 //status check on HTTP response for fetch function
@@ -45,7 +47,7 @@ function checkStatus(response) {
 // --------------- OTHER FUNCTIONS -------------------- //
 
 // v. bothersome formatting of str 'LASTNAME, FIRSTNAME' to 'Firstname Lastname'
-// for display and later Wikipedia API search
+// for display and later Wikipedia API search (case sensitive, )
 // has problems with military ranks, nicknames, 'Mc's in the 'name' field of the API
 function nameFormat(name) {
     console.log(name); // basic name
@@ -54,6 +56,10 @@ function nameFormat(name) {
     for (let item of newname) {
         item = item.toLowerCase(); // all lower case
         item = item.charAt(0).toUpperCase() + item.substr(1); // so can capitalize initial of each item
+        // caps the letter after a hyphen
+        item = item.replace(/(^|[\s-])\S/g, function (match) {
+            return match.toUpperCase();
+        });
         // push to new array
         namearray.push(item); // put in new array
         // if middle initial, remove the initial, Wikipedia doesn't need it
@@ -68,7 +74,7 @@ function nameFormat(name) {
 // // gets the wiki picture for the html
 function getWikiPhoto(name) {
     // format the name for the url
-    let wikiname = name.replace(' ', '_');
+    let wikiname = name.replace(' ', '_'); // gotta have the underscores not spaces
     let url = wikiUrl + wikiname;
     // get the data from the wikipedia API
     fetchJson(url)
@@ -85,37 +91,78 @@ function makePhotoHtml(data) {
 }
 
 // provides simple interpolation of candidate search results in one sentence if successful
+// candidates can be Senate or House, but not President, so if President in results, go to previous fundraiser for 2020
 function candidateHtml(data) {
     candidateJson = data;
     let candidateCard;
     let i=0;
     candidateIndex = candidateJson.results.length-1;
-    // destructure the data for the vars
-    let {
-        name,
-        incumbent_challenge_full,
-        party_full,
-        office,
-        state,
-        office_full,
-        election_districts
-    } = candidateJson.results[candidateIndex];
-    // flips candidate name into readable order
-    nameFormat(name);
-    //get the wikipedia picture from their API
-    getWikiPhoto(namefinal);
-    // create the html
-    // check to see if senate (S) otherwise House
+    // ghet office to check for House, Senates or President
+    let {office} = candidateJson.results[candidateIndex];
+    // THIS IS VERY UGLY
+    // if last race Senate: fill html, if last race House: fill html, if last race lost President:
+    // look for last campaign and fill that (H or S)
     if (office === 'S') {
-    candidateCard =
-    `<h3><span id="cap">${namefinal}</span></h3>
-    <p>is the ${party_full} ${incumbent_challenge_full} in the ${state} ${office_full} race.</p>
-    `;
-    }
-    else if (office === 'H' && office !== 'P') { // House candidate and not president
-    candidateCard = 
-    `<h3>${namefinal}</h3><p>is the ${party_full} candidate in the ${state} district ${election_districts} ${office_full} race.</p>`;
-    }
+        let {
+            name,
+            incumbent_challenge_full,
+            party_full,
+            office,
+            state,
+            office_full,
+            district
+        } = candidateJson.results[candidateIndex];
+        // flips candidate name into readable order
+        nameFormat(name);
+        //get the wikipedia picture from their API
+        getWikiPhoto(namefinal);
+        candidateCard =
+        `<h3><span id="cap">${namefinal}</span></h3>
+        <p>is the ${party_full} ${incumbent_challenge_full} in the ${state} ${office_full} race.</p>
+        `;
+        } else if (office === 'H') {
+            let {
+                name,
+                incumbent_challenge_full,
+                party_full,
+                office,
+                state,
+                office_full,
+                district
+            } = candidateJson.results[candidateIndex];
+            // flips candidate name into readable order
+            nameFormat(name);
+            //get the wikipedia picture from their API
+            getWikiPhoto(namefinal);
+            candidateCard = 
+        `<h3>${namefinal}</h3><p>is the ${party_full} candidate in the ${state} district ${district} ${office_full} race.</p>`;
+        } else if (office == 'P') { // House candidate and not president
+            let {           
+                name,
+                incumbent_challenge_full,
+                party_full,
+                office,
+                state,
+                office_full,
+                district
+            } = candidateJson.results[candidateIndex-1];
+            // flips candidate name into readable order
+            nameFormat(name);
+            //get the wikipedia picture from their API
+            getWikiPhoto(namefinal);
+            if (office === 'S') {
+                    candidateCard =
+                    `<h3><span id="cap">${namefinal}</span></h3>
+                    <p>is the ${party_full} ${incumbent_challenge_full} in the ${state} ${office_full} race.</p>
+                    `;
+                    }
+            else if (office === 'H') {
+                    candidateCard = 
+                    `
+                    <h3>${namefinal}</h3><p>is the ${party_full} candidate in the ${state} district ${district} ${office_full} race.</p>
+                    `;
+                }
+            }
     // now fill the div
     candidateDiv.innerHTML = candidateCard;
 }
@@ -130,6 +177,8 @@ function candidateCommittee() {
     // fetch the data and do stuff
     fetchJson(url)
         .then(candidateCommitteeHtml)
+        .then(candidateCommitteeReceipts)
+
 }
 
 // build and display the html from the committee data json, prepare for next api query
@@ -140,6 +189,7 @@ function candidateCommitteeHtml(data) {
     let i = 0;
     while (i<committeeJson.results.length){ // number of committees in array, one iteration per committee
         let {name, cycles, committee_id} = committeeJson.results[i]; // get id, name and active year of committee
+        committeeId = committee_id; // need this global for the receipts query
         if (cycles.includes(2020)) { // if committee active this year only
         // using the committee id query the financial API to get latest reported disbursement and add to html
         /// this should happen once only for each committee, create url, get data, find vars and make the html
@@ -171,6 +221,29 @@ function candidateCommitteeFinancials(data) {
     // build html
     committeeFinanceHtml = `<p id="committeeName">${committee_name} has spent $${dollars} between ${coverageStartFormat} and ${coverageEndFormat}</p>`
     return committeeFinanceHtml;
+}
+
+function candidateCommitteeReceipts() {
+    // url for API query
+    const urlprefix = `schedules/schedule_a/?two_year_transaction_period=2020&committee_id=`;
+    const urlreceipt = `&contributor_type=committee&sort=-contribution_receipt_date&`;
+    const url = urlbase + urlprefix + committeeId + urlreceipt + token + '&sort_null_only=false&per_page=20&sort_hide_null=false';
+    console.log(url);
+    fetch(url)
+        .then(candidateCommitteeReceiptsHtml)
+}
+
+function candidateCommitteeReceiptsHtml(data) {
+    receiptsJson = data;
+    // console.log(`Receipts JSON length= ${receiptsJson.results.length}`)
+    // receiptsJson.forEach(item => {
+    //     let {
+    //         contributor_name,
+    //         contribution_receipt_amount
+    //     } = receiptsJson;
+    // })
+    // console.log(contributor_name)
+    //vars= contributor.state contributor_name contribution_receipt_amount
 }
 
 
