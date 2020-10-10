@@ -8,15 +8,17 @@ let committeeHtml ='';
 let namefinal = '';
 let wikiJson = [];
 let committeeFinanceJson = [];
-let receiptsJson=[];
+let occupationJson = [];
 let committeeFinanceHtml='';
-let committeeId='';
+let committeeId = new String(); // mutable
+let occupationArray = [];
 const name = document.getElementById('name');
 const namebutton = document.getElementById('namebutton');
 const namesearch = document.getElementById('namesearch');
 const namediv = document.getElementById('namediv');
 const candidateDiv = document.getElementById('candidateDiv');
 const financialDiv = document.getElementById('financialDiv');
+
 
 
 // url variables
@@ -32,7 +34,7 @@ function fetchJson(url) {
     return fetch(url)
         .then(checkStatus)
         .then(data => data.json())
-        .catch(e => candidateDiv.innerHTML = `<p>Can't find some of that person's info or photograph. Clear and try again.</p>`)
+        .catch(e => candidateDiv.innerHTML = `<p>Can't find some of that person's info or photograph. They may not have a Wikipedia page. Clear and try again.</p>`)
 }
 
 //status check on HTTP response for fetch function
@@ -177,7 +179,7 @@ function candidateCommittee() {
     // fetch the data and do stuff
     fetchJson(url)
         .then(candidateCommitteeHtml)
-        .then(candidateCommitteeReceipts)
+        .then(committeeDonorByOccupation)
 
 }
 
@@ -189,8 +191,7 @@ function candidateCommitteeHtml(data) {
     let i = 0;
     while (i<committeeJson.results.length){ // number of committees in array, one iteration per committee
         let {name, cycles, committee_id} = committeeJson.results[i]; // get id, name and active year of committee
-        committeeId = committee_id; // need this global for the receipts query
-        if (cycles.includes(2020)) { // if committee active this year only
+            if (cycles.includes(2020)) { // if committee active this year only
         // using the committee id query the financial API to get latest reported disbursement and add to html
         /// this should happen once only for each committee, create url, get data, find vars and make the html
         const url = urlbase + 'committee/' + committee_id + '/totals/?' + token; // brings up all committees, work in index
@@ -198,7 +199,7 @@ function candidateCommitteeHtml(data) {
             .then(candidateCommitteeFinancials)
             .then(money => {
                 committeeHtml += `
-            <p>${name}</p>
+            <p>${name} ${committee_id}</p>
             ${committeeFinanceHtml}
             `
             financialDiv.innerHTML = committeeHtml;
@@ -206,6 +207,7 @@ function candidateCommitteeHtml(data) {
         } // end if
         i++; // increment while loop
     } // end while loop
+    return committeeJson;
 }
 
 // get the total disbursements for last quarter from each committee and display
@@ -223,28 +225,50 @@ function candidateCommitteeFinancials(data) {
     return committeeFinanceHtml;
 }
 
-function candidateCommitteeReceipts() {
-    // url for API query
-    const urlprefix = `schedules/schedule_a/?two_year_transaction_period=2020&committee_id=`;
-    const urlreceipt = `&contributor_type=committee&sort=-contribution_receipt_date&`;
-    const url = urlbase + urlprefix + committeeId + urlreceipt + token + '&sort_null_only=false&per_page=20&sort_hide_null=false';
-    console.log(url);
-    fetch(url)
-        .then(candidateCommitteeReceiptsHtml)
+// gets a list of committee donors by occupation and number for display
+function committeeDonorByOccupation(data) {
+    let committeeJsonInOccupationFunc = data;
+    let i = 0;
+    // this repeats something in candidateCommitteeHtml and could probably be simplified
+    while (i<committeeJsonInOccupationFunc.results.length){
+        let {committee_id, cycles} = committeeJsonInOccupationFunc.results[i];
+        if (cycles.includes(2020)) { // if this year
+            console.log(`Committee id in occupation function: ${committee_id}`);
+            // make the url for the occupation search
+            let url = `https://api.open.fec.gov/v1/schedules/schedule_a/by_occupation/?&api_key=UeuRrDCEiiFdnN7HrOMdT7lfYSEq6rL9s4PePW7C&committee_id=${committee_id}&sort_nulls_last=false&sort_null_only=false&per_page=100&sort_hide_null=true&cycle=2020`;
+            fetchJson(url)
+                .then(createOccupationArray)
+        } // end if
+        i++;
+    } // end while loop
 }
 
-function candidateCommitteeReceiptsHtml(data) {
-    receiptsJson = data;
-    // console.log(`Receipts JSON length= ${receiptsJson.results.length}`)
-    // receiptsJson.forEach(item => {
-    //     let {
-    //         contributor_name,
-    //         contribution_receipt_amount
-    //     } = receiptsJson;
-    // })
-    // console.log(contributor_name)
-    //vars= contributor.state contributor_name contribution_receipt_amount
+// this creates the object array of all occupation donor info
+function createOccupationArray(data) {
+    // data is 100 results, multiple pages
+    occupationJson = data;
+    let occupationTempObject = {};
+    // iterate through all results and output to html
+    for (let i = 0; i<occupationJson.pagination.pages; i++) { // page loop
+        for (let j = 0; j<occupationJson.results.length; j++) { // results in page loop
+        let {occupation, total, count, committee_id} = occupationJson.results[j];
+        committeeId = committee_id;
+        occupationTempObject = { // object for storing key/values, note committee_id to sort later
+            committee_id:`${committee_id}`,
+            occupation:`${occupation}`,
+            total:`${total}`,
+            count:`${count}`
+        };
+        occupationArray.push(occupationTempObject) // push to array of occupation objects, will contain all committees info in one array
+        } // end of results loop
+        let page = i+1;
+        let url = `https://api.open.fec.gov/v1/schedules/schedule_a/by_occupation/?&api_key=UeuRrDCEiiFdnN7HrOMdT7lfYSEq6rL9s4PePW7C&committee_id=${committeeId}&sort_nulls_last=false&sort_null_only=false&per_page=100&sort_hide_null=true&page=${page}&cycle=2020`;
+        console.log(`currrent url for occupation is: ${url}`);
+        fetchJson(url)
+            .then(() => {occupationJson = data;})
+    } // end of page loop
 }
+
 
 
 // ------------- EVENT LISTENERS -------------- //
