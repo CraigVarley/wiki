@@ -1,0 +1,130 @@
+html {
+    box-sizing: border-box;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+body {
+    margin-left:auto;
+    margin-right: auto;
+    padding-left:10px;
+    padding-right: 10px; 
+}
+
+#voteimg {
+    text-align: center;
+}
+
+#voteimg img {
+    width:100px;
+    height:100px;
+}
+
+#main {
+    margin-top:30px;
+    position: relative;
+
+}
+
+h1 {
+    color:black;
+    font-size: 3em;
+    text-align: left;
+    font-family: 'Oswald', sans-serif;
+    line-height: 1;
+}
+
+a {
+    text-decoration: none;
+    font-weight: bold;
+    color:black;
+}
+
+#main {
+    width:90%;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#main p {
+    font-size: small;
+    padding:10px;
+    border:2px solid #e32400;
+    margin-top: 30px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+input {
+    display:block;
+    width:95%;
+    height:35px;
+    border:1px grey solid;
+    margin-bottom:10px;
+    border-radius: 10px;
+    font-size: medium;
+    padding-left:15px;
+    max-width: 500px;
+
+}
+
+button {
+    width:48%;
+    border-radius:10px;
+    border:1px solid gray;
+    height:25px;
+    max-width: 250px;
+
+}
+
+button:nth-of-type(1) {
+    margin-right:5px;
+}
+
+button:nth-of-type(2) {
+    margin-left:5px;
+}
+
+#about {
+    width:90%;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:50px;
+}
+
+
+#about h4 {
+    margin-bottom:0;
+}
+
+#about p{
+    border:1px solid #00217a;
+    font-size: small;
+    padding:10px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:0;
+
+}
+
+#cap {
+    text-transform: capitalize;   
+}
+
+#committeeName {
+    padding-left: 30px;
+}
+
+footer {
+    width:90%;
+    margin-left:auto;
+    margin-right: auto;
+    font-size: x-small;
+
+}
+
+#candidateDiv,
+#financialDiv {
+    width:80%;
+    margin-left:auto;
+    margin-right:auto;
+}

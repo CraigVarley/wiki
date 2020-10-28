@@ -3,23 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald&display=swap" rel="stylesheet">
+
     <title>FEC API Tests</title>
 </head>
 <body>
-    <div id="main" style="width:1000px">
-        <h1>SEARCH FOR A 2020 CANDIDATE</h1>
+
+    <div id="voteimg">
+        <img alt="vote button" src="vote.png">
     </div>
 
-    <div id="namediv">
-    <input id="namesearch" placeholder="Type Candidate Name:"><button type="button" id="namebutton">Search</button><button type="id" id="clearbutton">Clear Results</button>
+    
+    <div id="main">
+        <h1>F.E.C. 2020 CANDIDATE FUNDING SEARCH</h1>
+        <div id="namediv">
+            <input id="namesearch" placeholder="Type Candidate Name: e.g. Mitch McConnell"><button type="button" id="namebutton">Search</button><button type="id" id="clearbutton">Clear Results</button>
+            </div>
+        <p>Search a Senate or House candidate to find their committees, how much they've raised, 
+            and the top 20 occupations/amounts of the donors who have contributed to those committees. Results appear below. </p>
     </div>
     <!-- API RESULTS GO HERE -->
     <div id="candidateDiv">
     </div>
     <div id="financialDiv">        
     </div>
+    <div id="occupationDiv">
+    </div>
 
-    <script src="app.js" type="text/javascript"></script>
+    <div id="about">
+        <h4>Background</h4>
+        <p>This is an ongoing javascript learning project by <a href="https:github.com/craigvarley">Craig Varley</a> searching the <a href="https://api.open.fec.gov/developers/">Federal Election Commission's API</a> to find their
+            active funding committees for the 2020 elections. It's active and as such
+            has a few bugs, particularly around candidate names in retrieving the Wikipedia image for 
+            the funding profile. You can find it on <a href="https://github.com/craigvarley/wiki">Github</a> and <a href="mailto:varley.craig@gmail.com">let me know</a> if you have ideas or want to help out.
+        </p>
+    </div>
+
+    <footer><p>Released under a <a href="https://creativecommons.org/licenses/by-nc/4.0/legalcode">Creative Commons Attribution-NonCommercial 4.0 International License</a></p></footer>
+
+    <script src="js/app.js" type="text/javascript"></script>
     </body>
 </html>
