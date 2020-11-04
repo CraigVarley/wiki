@@ -22,6 +22,12 @@ const namediv = document.getElementById('namediv');
 const candidateDiv = document.getElementById('candidateDiv');
 const financialDiv = document.getElementById('financialDiv');
 const occupationDiv = document.getElementById('occupationDiv');
+const resultButtons = document.getElementById('resultButtons');
+const occupationButton = document.getElementById('occupationButton');
+const occupationResults = document.getElementById('occupationResults');
+const occupationResults2 = document.getElementById('occupationResults2');
+const tableBody = document.getElementById('tbody');
+const tableCols = document.getElementById('tableCols');
 // API url variables
 const urlbase = 'https://api.open.fec.gov/v1/'; // base FEC url
 const wikiUrl = 'https://en.wikipedia.org/api/rest_v1/page/summary/'; // base wiki for pics of candidates
@@ -172,6 +178,7 @@ function candidateHtml(data) {
     // now fill the div
             }
     candidateDiv.innerHTML = candidateCard;
+    resultButtons.style.display = 'block';
 }
 
 // takes the candidate id and does a basic candidate funding committee API search, html created in next function
@@ -277,19 +284,41 @@ function addPage(data) {
         } // end of results loop
 }
 
+// // creates and adds html for occupation total table
+function addOccupationTotalHtml() {
+    let occupationTotalInfo= '';
+    let occupationArray2 = occupationArray.sort(function (x, y) {
+        return x.total - y.total;
+    });
+    occupationArray2.reverse();
+    // table headers, different for each of the 2 tables
+    occupationTotalInfo = 
+        `
+        <table id="table1">
+            <thead id="thead">
+                <tr>
+                    <th colspan="3">Top Donor $ by Occupation</th>
+                </tr>
+            </thead>
+                <tbody id="tbody">
+                <tr id="tableHeader"><td>Total $</td><td>Donor Count</td><td>Donor Occupation</td></tr>
+        `;
+    for (let i=0; i<19; i++) {
+        let occupationCount = occupationArray2[i].count;
+        let occupationTotal = occupationArray2[i].total;
+        let occupationOccupation = occupationArray2[i].occupation;
+        // creates the table html column headings from the occupation array results 
+        occupationTotalInfo +=
+        `
+        <tr><td>$${occupationTotal}</td><td>${occupationCount}</td><td>${occupationOccupation}</td></tr>
+        `
+    }
+    occupationResults.innerHTML = occupationTotalInfo; // add to html
+    occupationTotalInfo = `</tbody></table>`;
+    occupationResults.innerHTML += occupationTotalInfo; // add closing tags for table body
+    occupationResults.style.display = 'block'; // make it visible
+}
 
-// this will sort the occupationArray into highest donors and display as html
-// function sortOccupationArray() {
-//     let occupationArray2 = occupationArray;
-//     occupationArray2.sort(function (x, y) {
-//         return x.total - y.total;
-//     });
-
-//     console.log(`occupationArray2 = ${occupationArray2}`);
-    
-//     // // fill the div with the $ data
-//     // occupationDiv.innerHTML = occupationArrayHtml;
-// }
 
 // ------------- EVENT LISTENERS -------------- //
 
@@ -304,15 +333,22 @@ namediv.addEventListener('click', (e) => {
         fetchJson(candidateUrl)
             .then(candidateHtml)
             .then(candidateCommittee)
-            .then(sortOccupationArray)
     }
     // CLEAR RESULTS
     if (e.target === clearbutton) {
         candidateDiv.innerHTML = '';
         financialDiv.innerHTML = '';
+        committeeHtml.innerHTML = '';
         namesearch.value = '';
-        committeeHtml = ''; 
+        occupationResults.innerText = '';
 
     }
 })
 
+
+// top 20 count/$ totals of occupations of each donor from button clicks above the photo (after initial results)
+resultButtons.addEventListener('click', (e) => {
+    if (e.target === occupationButton) {
+        addOccupationTotalHtml();
+    }
+})
