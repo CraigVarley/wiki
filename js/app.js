@@ -23,13 +23,10 @@ const namediv = document.getElementById('namediv');
 const candidateDiv = document.getElementById('candidateDiv');
 const financialDiv = document.getElementById('financialDiv');
 const occupationDiv = document.getElementById('occupationDiv');
-const resultButtons = document.getElementById('resultButtons');
-const occupationButton = document.getElementById('occupationButton');
 const occupationResults = document.getElementById('occupationResults');
 const occupationResults2 = document.getElementById('occupationResults2');
 const tableBody = document.getElementById('tbody');
 const tableCols = document.getElementById('tableCols');
-const donationStateButton = document.getElementById('donationStateButton');
 const donationStateResults = document.getElementById('donationStateResults');
 // API url variables
 const urlbase = 'https://api.open.fec.gov/v1/'; // base FEC url
@@ -167,7 +164,6 @@ function candidateHtml(data) {
     // now fill the div
             }
     candidateDiv.innerHTML = candidateCard;
-    resultButtons.style.display = 'block';
 }
 
 // takes the candidate id and does a basic candidate funding committee API search, html created in next function
@@ -379,6 +375,8 @@ namediv.addEventListener('click', (e) => {
         fetchJson(candidateUrl)
             .then(candidateHtml)
             .then(candidateCommittee)
+            .then(createStateDonationJson)
+            .then(addOccupationTotalHtml);
     }
     // CLEAR RESULTS
     if (e.target === clearbutton) {
@@ -392,20 +390,3 @@ namediv.addEventListener('click', (e) => {
         
         }
 })
-
-
-// 1. top 20 count/$ totals of occupations of each donor from button clicks above the photo (after initial results)
-// 2. map of donors by state and colored by number to candidate via d3
-resultButtons.addEventListener('click', (e) => {
-    if (e.target === occupationButton) {
-        addOccupationTotalHtml();
-    }
-    if (e.target === donationStateButton) {
-        createStateDonationJson();
-    }
-})
-
-
-
-//// D3 MAP //////
-
