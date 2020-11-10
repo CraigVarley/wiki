@@ -10,6 +10,7 @@ let wikiJson = [];
 let committeeFinanceJson = [];
 let occupationJson = [];
 let committeeFinanceHtml='';
+let candidateId;
 let committeeId = new String(); // mutable
 let occupationArray = [];
 let countOccupationArray = [];
@@ -28,12 +29,13 @@ const occupationResults = document.getElementById('occupationResults');
 const occupationResults2 = document.getElementById('occupationResults2');
 const tableBody = document.getElementById('tbody');
 const tableCols = document.getElementById('tableCols');
+const donationStateButton = document.getElementById('donationStateButton');
+const donationStateResults = document.getElementById('donationStateResults');
 // API url variables
 const urlbase = 'https://api.open.fec.gov/v1/'; // base FEC url
 const wikiUrl = 'https://en.wikipedia.org/api/rest_v1/page/summary/'; // base wiki for pics of candidates
 const token = '&api_key=UeuRrDCEiiFdnN7HrOMdT7lfYSEq6rL9s4PePW7C'; // 
 const candidates = 'candidates/?q='; 
-
 
 // -------------- BASIC FETCH FUNCTIONS ------------------- //
 
@@ -151,20 +153,7 @@ function candidateHtml(data) {
             getWikiPhoto(namefinal);
             candidateCard = 
         `<h3>${namefinal}</h3><p>is the ${party_full} candidate in the ${state} district ${district} ${office_full} race.</p>`;
-        } else if (office == 'P') { // House candidate and not president
-            // let {           
-            //     name,
-            //     incumbent_challenge_full,
-            //     party_full,
-            //     office,
-            //     state,
-            //     office_full,
-            //     district
-            // } = candidateJson.results[candidateIndex-1];
-            // // flips candidate name into readable order
-            // nameFormat(name);
-            // //get the wikipedia picture from their API
-            // getWikiPhoto(namefinal);
+        } else if (office == 'P') { 
             candidateCard = `
             <p>Your candidate is either running or ran for President in their last race. Try entering a Senate or House
             candidate instead. If they're not running for Congress right now, the result will be a primary committee.
@@ -185,6 +174,7 @@ function candidateHtml(data) {
 function candidateCommittee() {
     // create the url from previous api results to search the committee API for chosen candidate's campaign
     let  {candidate_id, office} = candidateJson.results[candidateIndex];
+    candidateId = candidate_id;
     const committee = `&committee_type=${office}`;
     const candidate = `candidate/${candidate_id}/committees/?`
     const url = urlbase + candidate + token + committee;
@@ -294,30 +284,86 @@ function addOccupationTotalHtml() {
     // table headers, different for each of the 2 tables
     occupationTotalInfo = 
         `
-        <table id="table1">
-            <thead id="thead">
-                <tr>
-                    <th colspan="3">Top Donor $ by Occupation</th>
-                </tr>
+        <h2>Donors By Occupation<br>(Searchable & Sortable)</h2>
+        <table id="" class="display compact">
+            <thead>
+                <tr><th>Total $</th><th>Donor Count</th><th>Donor Occupation</th></tr>
             </thead>
-                <tbody id="tbody">
-                <tr id="tableHeader"><td>Total $</td><td>Donor Count</td><td>Donor Occupation</td></tr>
+            <tbody>
         `;
     for (let i=0; i<19; i++) {
         let occupationCount = occupationArray2[i].count;
         let occupationTotal = occupationArray2[i].total;
         let occupationOccupation = occupationArray2[i].occupation;
-        // creates the table html column headings from the occupation array results 
+        // creates the html table rows from the occupation array results 
         occupationTotalInfo +=
         `
         <tr><td>$${occupationTotal}</td><td>${occupationCount}</td><td>${occupationOccupation}</td></tr>
-        `
+        `;
     }
     occupationResults.innerHTML = occupationTotalInfo; // add to html
     occupationTotalInfo = `</tbody></table>`;
     occupationResults.innerHTML += occupationTotalInfo; // add closing tags for table body
+    // datatable formatting add
+    $('table.display').DataTable();
     occupationResults.style.display = 'block'; // make it visible
 }
+
+function createStateDonationJson() {
+    // candidateId currently filled globally out of candidateCommittee()
+    // create state donation url
+    let stateDonationUrl = `https://api.open.fec.gov/v1/schedules/schedule_a/by_state/by_candidate/?sort_hide_null=false&candidate_id=${candidateId}&cycle=2020${token}&per_page=60&sort_null_only=false&sort_nulls_last=false&election_full=true&page=1`;
+    fetchJson(stateDonationUrl)
+        .then(createStateDonationArray)
+        .then(createStateDonationTable)
+}
+
+function createStateDonationArray(data) {
+    // takes array and simplifies to
+    let stateDonationArray=[];
+    for (let i=0; i<data.results.length; i++) {
+        // just keep the needed values in  a new object and push to array
+        let {state_full, count, total} = data.results[i];
+        let stateDonationObject = {
+            state:`${state_full}`,
+            count:`${count}`,
+            total:`${total}`
+        };
+        stateDonationArray.push(stateDonationObject);
+    }
+    return stateDonationArray;
+}
+
+function createStateDonationTable(data) {
+    console.log(data)
+    let stateDonationInfo = 
+        `
+        <h2>Donors By State <br>(Searchable & Sortable)</h2>
+        <table id="" class="display compact">
+            <thead>
+                <tr>
+                <tr><th>State</th><th>Donor Count</th><th>Total Donor $</th></tr>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+    for (let i=0; i<data.length; i++) {
+        let state = data[i].state;
+        let count = data[i].count;
+        let total = data[i].total;
+        stateDonationInfo +=
+        `
+        <tr><td>${state}</td><td>${count}</td><td>$${total}</td></tr>
+        `
+    }
+    donationStateResults.innerHTML = stateDonationInfo;
+    stateDonationInfo = `</tbody></table>`;
+    donationStateResults.innerHTML += stateDonationInfo; // add closing tags for table body
+    // datatable formatting add
+    $('table.display').DataTable();
+    donationStateResults.style.display = 'block';
+}
+
 
 
 // ------------- EVENT LISTENERS -------------- //
@@ -336,19 +382,30 @@ namediv.addEventListener('click', (e) => {
     }
     // CLEAR RESULTS
     if (e.target === clearbutton) {
-        candidateDiv.innerHTML = '';
-        financialDiv.innerHTML = '';
-        committeeHtml.innerHTML = '';
+        candidateDiv.innerText = '';
+        financialDiv.innerText = '';
+        committeeHtml = '';
         namesearch.value = '';
         occupationResults.innerText = '';
-
-    }
+        donationStateResults.innerHTML = '';
+        occupationArray = [];
+        
+        }
 })
 
 
-// top 20 count/$ totals of occupations of each donor from button clicks above the photo (after initial results)
+// 1. top 20 count/$ totals of occupations of each donor from button clicks above the photo (after initial results)
+// 2. map of donors by state and colored by number to candidate via d3
 resultButtons.addEventListener('click', (e) => {
     if (e.target === occupationButton) {
         addOccupationTotalHtml();
     }
+    if (e.target === donationStateButton) {
+        createStateDonationJson();
+    }
 })
+
+
+
+//// D3 MAP //////
+

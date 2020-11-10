@@ -1,3 +1,4 @@
+
 html {
     box-sizing: border-box;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
@@ -31,6 +32,12 @@ h1 {
     text-align: left;
     font-family: 'Oswald', sans-serif;
     line-height: 1;
+}
+
+h2 {
+    text-align:center;
+    font: size 2em;
+    font-family: 'Oswald', sans-serif;
 }
 
 a {
@@ -134,30 +141,26 @@ footer {
     display:none;
 }
 
-#occupationResults {
+#occupationResults,
+#donationStateResults {
     display:none;
+    max-width:400px;
+    margin-top:20px;
+    text-align:center;
+    border-top:2px solid #e32400;
 }
 
 table {
-    margin-top:30px;
-    width:335px
-}
-
-th {
-    border:1px solid lightgray;
-}
-
-tr {
     font-size: smaller;
 }
-
-tr:nth-child(2n) {
-    background-color: lightgray;
-}  
 
 #candidateDiv p,
 #financialDiv p {
     font-size: smaller;
-    max-width:330px;
-}
+    max-width:330px;}
 
+#tableDiv {
+    display:flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
