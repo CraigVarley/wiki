@@ -1,4 +1,3 @@
-
 // DATA.GOV  - some federal election candidate queries via FEC API with wikipedia query for images
 
 // array and string variables
@@ -37,8 +36,8 @@ const candidates = 'candidates/?q=';
 // -------------- BASIC FETCH FUNCTIONS ------------------- //
 
 //basic fetch function called in event listener on search button
-function fetchJson(url) {
-    return fetch(url)
+async function fetchJson(url) {
+    return await fetch(url)
         .then(checkStatus)
         .then(data => data.json())
 }
@@ -82,12 +81,12 @@ function nameFormat(name) {
 }
 
 // // gets the wiki picture for the html
-function getWikiPhoto(name) {
+async function getWikiPhoto(name) {
     // format the name for the url
     let wikiname = name.replace(' ', '_'); // gotta have the underscores not spaces
     let url = wikiUrl + wikiname;
     // get the data from the wikipedia API
-    fetchJson(url)
+    await fetchJson(url)
         .then(makePhotoHtml)
         .catch(e => candidateDiv.innerHTML = `
         <p>Can't find some of that person's image. They may not have a Wikipedia page or some middle names I haven't taken into account.</p>
@@ -167,7 +166,7 @@ function candidateHtml(data) {
 }
 
 // takes the candidate id and does a basic candidate funding committee API search, html created in next function
-function candidateCommittee() {
+async function candidateCommittee() {
     // create the url from previous api results to search the committee API for chosen candidate's campaign
     let  {candidate_id, office} = candidateJson.results[candidateIndex];
     candidateId = candidate_id;
@@ -175,13 +174,13 @@ function candidateCommittee() {
     const candidate = `candidate/${candidate_id}/committees/?`
     const url = urlbase + candidate + token + committee;
     // fetch the data and do stuff
-    fetchJson(url)
+    await fetchJson(url)
         .then(candidateCommitteeHtml)
         .then(committeeDonorByOccupation)
 }
 
 // build and display the html from the committee data json, prepare for next api query
-function candidateCommitteeHtml(data) {
+async function candidateCommitteeHtml(data) {
     // array of all the committee names (sometimes 1, sometimes 10+, not all current races)
     committeeJson = data;
     // iterate through results array to get each committee name and info
@@ -192,7 +191,7 @@ function candidateCommitteeHtml(data) {
         // using the committee id query the financial API to get latest reported disbursement and add to html
         /// this should happen once only for each committee, create url, get data, find vars and make the html
         const url = urlbase + 'committee/' + committee_id + '/totals/?' + token; // brings up all committees, work in index
-        fetchJson(url)
+        await fetchJson(url)
             .then(candidateCommitteeFinancials)
             .then(money => {
                 committeeHtml += `
@@ -223,7 +222,7 @@ function candidateCommitteeFinancials(data) {
 }
 
 // gets a list of committee donors by occupation and number for display
-function committeeDonorByOccupation(data) {
+async function committeeDonorByOccupation(data) {
     let committeeJsonInOccupationFunc = data;
     let i = 0;
     // this repeats something in candidateCommitteeHtml and could probably be simplified
@@ -233,7 +232,7 @@ function committeeDonorByOccupation(data) {
             // console.log(`Committee id in occupation function: ${committee_id}`);
             // make the url for the occupation search
             let url = `https://api.open.fec.gov/v1/schedules/schedule_a/by_occupation/?&api_key=UeuRrDCEiiFdnN7HrOMdT7lfYSEq6rL9s4PePW7C&committee_id=${committee_id}&sort_nulls_last=false&sort_null_only=false&per_page=100&sort_hide_null=true&cycle=2020`;
-            fetchJson(url)
+            await fetchJson(url)
                 .then((data)=>createOccupationArray(data, committee_id))
         } // end if
         i++;
@@ -241,7 +240,7 @@ function committeeDonorByOccupation(data) {
 }
 
 // this loops through multiple pages of occupation donor then passes page to addPage
-function createOccupationArray(data, committee_id) {
+async function createOccupationArray(data, committee_id) {
     // data is 100 results, multiple pages
     committeeId = committee_id;
     // iterate through all results and output to html
@@ -250,7 +249,7 @@ function createOccupationArray(data, committee_id) {
         let page = i+1;
         let url = `https://api.open.fec.gov/v1/schedules/schedule_a/by_occupation/?&api_key=UeuRrDCEiiFdnN7HrOMdT7lfYSEq6rL9s4PePW7C&committee_id=${committeeId}&sort_nulls_last=false&sort_null_only=false&per_page=100&sort_hide_null=true&page=${page}&cycle=2020`;
         // console.log(`currrent url for occupation is: ${url}`);
-        fetchJson(url)
+        await fetchJson(url)
             .then((data) => addPage(data));
     } // end of page loop
 }
@@ -287,7 +286,7 @@ function addOccupationTotalHtml() {
             </thead>
             <tbody>
         `;
-    for (let i=0; i<19; i++) {
+    for (let i=0; i<occupationArray2.length; i++) {
         let occupationCount = occupationArray2[i].count;
         let occupationTotal = occupationArray2[i].total;
         let occupationOccupation = occupationArray2[i].occupation;
@@ -305,11 +304,11 @@ function addOccupationTotalHtml() {
     occupationResults.style.display = 'block'; // make it visible
 }
 
-function createStateDonationJson() {
+async function createStateDonationJson() {
     // candidateId currently filled globally out of candidateCommittee()
     // create state donation url
     let stateDonationUrl = `https://api.open.fec.gov/v1/schedules/schedule_a/by_state/by_candidate/?sort_hide_null=false&candidate_id=${candidateId}&cycle=2020${token}&per_page=60&sort_null_only=false&sort_nulls_last=false&election_full=true&page=1`;
-    fetchJson(stateDonationUrl)
+    await fetchJson(stateDonationUrl)
         .then(createStateDonationArray)
         .then(createStateDonationTable)
 }
@@ -372,7 +371,7 @@ namediv.addEventListener('click', (e) => {
         //make candidate search url
         const candidateUrl = urlbase + candidates + candName + token;
         // get it, save it as 
-        fetchJson(candidateUrl)
+        /*await*/ fetchJson(candidateUrl)
             .then(candidateHtml)
             .then(candidateCommittee)
             .then(createStateDonationJson)
